@@ -82,4 +82,15 @@ public class SupervisorController {
         }
     }
 
+    @GetMapping("/send/{app}")
+    public String send(@PathVariable String app) throws SupervisordException {
+        OapiRobotSendRequest.Actioncard actionCard = new OapiRobotSendRequest.Actioncard();
+        actionCard.setTitle(app);
+        actionCard.setText(String.format("# %s \n", app) +
+                "---\n" +
+                String.format("启动状态: <font color=#52C41A>%s</font> \n", "成功"));
+        dingTalkMessageService.sendActionCard(actionCard);
+        return "done";
+    }
+
 }
