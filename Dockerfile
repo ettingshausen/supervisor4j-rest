@@ -1,10 +1,6 @@
-FROM centos:7.6.1810
-
-EXPOSE 9001
-
-RUN yum -y install epel-release && yum -y install python-pip && pip install supervisor
-RUN mkdir -p /etc/supervisor
-
-ENTRYPOINT ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
-
-
+FROM openjdk:8-jdk-alpine
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
