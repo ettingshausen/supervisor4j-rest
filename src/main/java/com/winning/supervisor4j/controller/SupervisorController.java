@@ -2,8 +2,14 @@ package com.winning.supervisor4j.controller;
 
 
 import com.dingtalk.api.request.OapiRobotSendRequest;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.satikey.tools.supervisord.exceptions.SupervisordException;
 import com.winning.supervisor4j.config.DingTalkConfig;
+import com.winning.supervisor4j.config.SupervisorConfig;
 import com.winning.supervisor4j.service.DingTalkMessageService;
 import com.winning.supervisor4j.service.SupervisordHolder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +23,9 @@ import javax.annotation.Resource;
 @RestController
 public class SupervisorController {
 
+
+    @Autowired
+    private SupervisorConfig supervisorConfig;
     @Resource
     private DingTalkMessageService dingTalkMessageService;
 
@@ -68,7 +77,18 @@ public class SupervisorController {
     @GetMapping("/version")
     public String version() throws SupervisordException {
 
-        return supervisordHolder.getSupervisord().getAPIVersion();
+        return String.format("version: %s", supervisordHolder.getSupervisord().getAPIVersion()) +
+                System.lineSeparator() +
+                String.format("supervisor_host: %s", supervisorConfig.getUrl()) +
+                System.lineSeparator() +
+                String.format("supervisor_username: %s", supervisorConfig.getUsername()) +
+                System.lineSeparator() +
+                String.format("supervisor_password: %s", supervisorConfig.getPassword()) +
+                System.lineSeparator() +
+                String.format("ding-talk_token: %s", dingTalkConfig.getToken()) +
+                System.lineSeparator() +
+                String.format("ding-talk_secret: %s", dingTalkConfig.getSecret()) +
+                System.lineSeparator();
     }
 
 
