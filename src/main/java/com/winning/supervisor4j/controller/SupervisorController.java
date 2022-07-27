@@ -2,21 +2,14 @@ package com.winning.supervisor4j.controller;
 
 
 import com.dingtalk.api.request.OapiRobotSendRequest;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.satikey.tools.supervisord.Supervisord;
 import com.satikey.tools.supervisord.exceptions.SupervisordException;
 import com.winning.supervisor4j.config.DingTalkConfig;
 import com.winning.supervisor4j.config.SupervisorConfig;
 import com.winning.supervisor4j.service.DingTalkMessageService;
 import com.winning.supervisor4j.service.SupervisordHolder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -36,14 +29,17 @@ public class SupervisorController {
     private SupervisordHolder supervisordHolder;
 
     @PostMapping("/stop/{app}")
-    public String stop(@PathVariable String app) {
+    public String stop(@PathVariable String app, @RequestParam(defaultValue = "0") int index) {
+        SupervisorConfig.Instance instance = supervisorConfig.getInstances().get(index);
         try {
-            supervisordHolder.getSupervisord().stopProcess(app, true);
+            Supervisord supervisord = supervisordHolder.getSupervisord(index);
+            supervisord.stopProcess(app, true);
             if (dingTalkConfig.isEnable()) {
                 OapiRobotSendRequest.Actioncard actionCard = new OapiRobotSendRequest.Actioncard();
                 actionCard.setTitle(app);
                 actionCard.setText(String.format("# %s \n", app) +
                         "---\n" +
+                        String.format("服务器: <font color=#52C41A>%s</font>    \n", instance.getHost()) +
                         String.format("<font color=#52C41A>%s</font> \n", "正在部署，请稍后。"));
                 dingTalkMessageService.sendActionCard(actionCard);
             }
@@ -55,15 +51,17 @@ public class SupervisorController {
     }
 
     @PostMapping("/start/{app}")
-    public String start(@PathVariable String app) {
-
+    public String start(@PathVariable String app, @RequestParam(defaultValue = "0") int index) {
+        SupervisorConfig.Instance instance = supervisorConfig.getInstances().get(index);
         try {
-            supervisordHolder.getSupervisord().startProcess(app, true);
+            Supervisord supervisord = supervisordHolder.getSupervisord(index);
+            supervisord.startProcess(app, true);
             if (dingTalkConfig.isEnable()) {
                 OapiRobotSendRequest.Actioncard actionCard = new OapiRobotSendRequest.Actioncard();
                 actionCard.setTitle(app);
                 actionCard.setText(String.format("# %s \n", app) +
                         "---\n" +
+                        String.format("服务器: <font color=#52C41A>%s</font>    \n", instance.getHost()) +
                         String.format("启动状态: <font color=#52C41A>%s</font> \n", "成功"));
                 dingTalkMessageService.sendActionCard(actionCard);
             }
@@ -75,15 +73,18 @@ public class SupervisorController {
     }
 
     @GetMapping("/version")
-    public String version() throws SupervisordException {
+    public String version(@RequestParam(defaultValue = "0") int index) throws SupervisordException {
 
-        return String.format("version: %s", supervisordHolder.getSupervisord().getAPIVersion()) +
+        SupervisorConfig.Instance instance = supervisorConfig.getInstances().get(index);
+        Supervisord supervisord = supervisordHolder.getSupervisord(index);
+
+        return String.format("version: %s", supervisord.getAPIVersion()) +
                 System.lineSeparator() +
-                String.format("supervisor_host: %s", supervisorConfig.getUrl()) +
+                String.format("supervisor_host: %s", instance.getUrl()) +
                 System.lineSeparator() +
-                String.format("supervisor_username: %s", supervisorConfig.getUsername()) +
+                String.format("supervisor_username: %s", instance.getUsername()) +
                 System.lineSeparator() +
-                String.format("supervisor_password: %s", supervisorConfig.getPassword()) +
+                String.format("supervisor_password: %s", instance.getPassword()) +
                 System.lineSeparator() +
                 String.format("ding-talk_token: %s", dingTalkConfig.getToken()) +
                 System.lineSeparator() +
@@ -91,11 +92,17 @@ public class SupervisorController {
                 System.lineSeparator();
     }
 
+    @GetMapping("/instances")
+    public Object instances() {
+       return supervisorConfig.getInstances();
+    }
+
 
     @GetMapping("/process/{app}")
-    public Object processInfo(@PathVariable String app) {
+    public Object processInfo(@PathVariable String app, @RequestParam(defaultValue = "0") int index) {
         try {
-            return supervisordHolder.getSupervisord().getProcessInfo(app);
+            Supervisord supervisord = supervisordHolder.getSupervisord(index);
+            return supervisord.getProcessInfo(app);
         } catch (SupervisordException e) {
             e.printStackTrace();
             return null;
@@ -103,11 +110,14 @@ public class SupervisorController {
     }
 
     @GetMapping("/send/{app}")
-    public String send(@PathVariable String app) throws SupervisordException {
+    public String send(@PathVariable String app, @RequestParam(defaultValue = "0") int index) throws SupervisordException {
+        SupervisorConfig.Instance instance = supervisorConfig.getInstances().get(index);
+
         OapiRobotSendRequest.Actioncard actionCard = new OapiRobotSendRequest.Actioncard();
         actionCard.setTitle(app);
         actionCard.setText(String.format("# %s \n", app) +
                 "---\n" +
+                String.format("服务器: <font color=#52C41A>%s</font> \n", instance.getHost()) +
                 String.format("启动状态: <font color=#52C41A>%s</font> \n", "成功"));
         dingTalkMessageService.sendActionCard(actionCard);
         return "done";

@@ -1,0 +1,19 @@
+server:
+  port: 8088
+
+supervisor:
+  instances:
+    - url: http://172.16.0.108:9001
+      username: user
+      password: 123
+    - url: http://172.16.6.114:9002
+      username: admin
+      password: win.2019
+    - url: http://172.16.0.154:9002
+      username: admin
+      password: win.2019
+dingtalk:
+  enable: true
+  token: 086b3ea89699695f6641c18d6b33dbf20f7a192dadb78f664578ce484965cfbf
+  secret: SEC1f0f14fc4792bcaa6039a3c0da1b55f5722d7cca87dbf910e3c27e55c35dab6f
+
