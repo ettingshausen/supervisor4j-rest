@@ -6,7 +6,7 @@ supervisor:
     - url: http://172.16.0.108:9001
       username: user
       password: 123
-    - url: http://172.16.6.114:9002
+    - url: http://172.6.6.114:9002
       username: admin
       password: win.2019
     - url: http://172.16.0.154:9002
