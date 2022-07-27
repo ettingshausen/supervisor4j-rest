@@ -9,6 +9,7 @@ import com.winning.supervisor4j.config.SupervisorConfig;
 import com.winning.supervisor4j.service.DingTalkMessageService;
 import com.winning.supervisor4j.service.SupervisordHolder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -51,7 +52,9 @@ public class SupervisorController {
     }
 
     @PostMapping("/start/{app}")
-    public String start(@PathVariable String app, @RequestParam(defaultValue = "0") int index) {
+    public String start(@PathVariable String app, @RequestParam(defaultValue = "0") int index,
+                        @RequestParam(required = false) String branch,
+                        @RequestParam(required = false) String build) {
         SupervisorConfig.Instance instance = supervisorConfig.getInstances().get(index);
         try {
             Supervisord supervisord = supervisordHolder.getSupervisord(index);
@@ -59,9 +62,12 @@ public class SupervisorController {
             if (dingTalkConfig.isEnable()) {
                 OapiRobotSendRequest.Actioncard actionCard = new OapiRobotSendRequest.Actioncard();
                 actionCard.setTitle(app);
+
                 actionCard.setText(String.format("# %s \n", app) +
                         "---\n" +
                         String.format("服务器: <font color=#52C41A>%s</font>    \n", instance.getHost()) +
+                        (StringUtils.isEmpty(branch) ? "" : String.format("分支: <font color=#52C41A>%s</font>    \n", branch)) +
+                        (StringUtils.isEmpty(build) ? "" : String.format("Build: <font color=#52C41A>#%s</font>    \n", build)) +
                         String.format("启动状态: <font color=#52C41A>%s</font> \n", "成功"));
                 dingTalkMessageService.sendActionCard(actionCard);
             }
@@ -94,7 +100,7 @@ public class SupervisorController {
 
     @GetMapping("/instances")
     public Object instances() {
-       return supervisorConfig.getInstances();
+        return supervisorConfig.getInstances();
     }
 
 
