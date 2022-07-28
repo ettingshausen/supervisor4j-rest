@@ -116,14 +116,18 @@ public class SupervisorController {
     }
 
     @GetMapping("/send/{app}")
-    public String send(@PathVariable String app, @RequestParam(defaultValue = "0") int index) throws SupervisordException {
+    public String send(@PathVariable String app, @RequestParam(defaultValue = "0") int index,
+                       @RequestParam(required = false) String branch,
+                       @RequestParam(required = false) String build) throws SupervisordException {
         SupervisorConfig.Instance instance = supervisorConfig.getInstances().get(index);
 
         OapiRobotSendRequest.Actioncard actionCard = new OapiRobotSendRequest.Actioncard();
         actionCard.setTitle(app);
         actionCard.setText(String.format("# %s \n", app) +
                 "---\n" +
-                String.format("服务器: <font color=#52C41A>%s</font> \n", instance.getHost()) +
+                String.format("服务器: <font color=#52C41A>%s</font>   \n", instance.getHost()) +
+                (StringUtils.isEmpty(branch) ? "" : String.format("分支: <font color=#52C41A>%s</font>    \n", branch)) +
+                (StringUtils.isEmpty(build) ? "" : String.format("Build: <font color=#52C41A>#%s</font>    \n", build)) +
                 String.format("启动状态: <font color=#52C41A>%s</font> \n", "成功"));
         dingTalkMessageService.sendActionCard(actionCard);
         return "done";
