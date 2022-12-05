@@ -30,7 +30,8 @@ public class SupervisorController {
     private SupervisordHolder supervisordHolder;
 
     @PostMapping("/stop/{app}")
-    public String stop(@PathVariable String app, @RequestParam(defaultValue = "0") int index) {
+    public String stop(@PathVariable String app, @RequestParam(defaultValue = "0") int index,
+                      @RequestParam(defaultValue = "0") int apush) {
         SupervisorConfig.Instance instance = supervisorConfig.getInstances().get(index);
         try {
             Supervisord supervisord = supervisordHolder.getSupervisord(index);
@@ -43,6 +44,9 @@ public class SupervisorController {
                         String.format("服务器: <font color=#52C41A>%s</font>    \n", instance.getHost()) +
                         String.format("<font color=#52C41A>%s</font> \n", "正在部署，请稍后。"));
                 dingTalkMessageService.sendActionCard(actionCard);
+                if (apush > 0) {
+                    dingTalkMessageService.sendActionCard2Others(actionCard);
+                }
             }
         } catch (SupervisordException e) {
             return "stop failed!" + e.getMessage();
@@ -54,7 +58,8 @@ public class SupervisorController {
     @PostMapping("/start/{app}")
     public String start(@PathVariable String app, @RequestParam(defaultValue = "0") int index,
                         @RequestParam(required = false) String branch,
-                        @RequestParam(required = false) String build) {
+                        @RequestParam(required = false) String build,
+                        @RequestParam(defaultValue = "0") int apush) {
         SupervisorConfig.Instance instance = supervisorConfig.getInstances().get(index);
         try {
             Supervisord supervisord = supervisordHolder.getSupervisord(index);
@@ -70,6 +75,9 @@ public class SupervisorController {
                         (StringUtils.isEmpty(build) ? "" : String.format("Build: <font color=#52C41A>#%s</font>    \n", build)) +
                         String.format("启动状态: <font color=#52C41A>%s</font> \n", "成功"));
                 dingTalkMessageService.sendActionCard(actionCard);
+                if (apush > 0) {
+                    dingTalkMessageService.sendActionCard2Others(actionCard);
+                }
             }
         } catch (SupervisordException e) {
             return "start failed!" + e.getMessage();
@@ -118,7 +126,8 @@ public class SupervisorController {
     @GetMapping("/send/{app}")
     public String send(@PathVariable String app, @RequestParam(defaultValue = "0") int index,
                        @RequestParam(required = false) String branch,
-                       @RequestParam(required = false) String build) throws SupervisordException {
+                       @RequestParam(required = false) String build,
+                       @RequestParam(defaultValue = "0") int apush) throws SupervisordException {
         SupervisorConfig.Instance instance = supervisorConfig.getInstances().get(index);
 
         OapiRobotSendRequest.Actioncard actionCard = new OapiRobotSendRequest.Actioncard();
@@ -130,6 +139,9 @@ public class SupervisorController {
                 (StringUtils.isEmpty(build) ? "" : String.format("Build: <font color=#52C41A>#%s</font>    \n", build)) +
                 String.format("启动状态: <font color=#52C41A>%s</font> \n", "成功"));
         dingTalkMessageService.sendActionCard(actionCard);
+        if (apush > 0) {
+            dingTalkMessageService.sendActionCard2Others(actionCard);
+        }
         return "done";
     }
 

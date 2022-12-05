@@ -17,6 +17,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -31,14 +32,14 @@ public class DingTalkMessageService {
 
 
     public void sendTextMessage(String app) {
-        DingTalkClient client = new DefaultDingTalkClient(buildServiceURL());
+        DingTalkClient client = new DefaultDingTalkClient(buildServiceURL(dingTalkConfig));
         OapiRobotSendRequest request = new OapiRobotSendRequest();
         request.setMsgtype("actionCard");
         OapiRobotSendRequest.Actioncard actioncard = new OapiRobotSendRequest.Actioncard();
         actioncard.setTitle(app);
         actioncard.setText(String.format("# %s \n", app) +
                 "---\n" +
-               String.format("启动状态: <font color=#52C41A>%s</font> \n", "成功"));
+                String.format("启动状态: <font color=#52C41A>%s</font> \n", "成功"));
         request.setActionCard(actioncard);
 
         try {
@@ -50,7 +51,7 @@ public class DingTalkMessageService {
 
 
     public void sendActionCard(OapiRobotSendRequest.Actioncard actionCard) {
-        DingTalkClient client = new DefaultDingTalkClient(buildServiceURL());
+        DingTalkClient client = new DefaultDingTalkClient(buildServiceURL(dingTalkConfig));
         OapiRobotSendRequest request = new OapiRobotSendRequest();
         request.setMsgtype("actionCard");
         request.setActionCard(actionCard);
@@ -62,18 +63,38 @@ public class DingTalkMessageService {
         }
     }
 
-    private String buildServiceURL(){
+    public void sendActionCard2Others(OapiRobotSendRequest.Actioncard actionCard) {
+
+        List<DingTalkConfig> others = dingTalkConfig.getOtherChatGroups();
+        others.forEach((config) -> {
+
+            DingTalkClient client = new DefaultDingTalkClient(buildServiceURL(config));
+            OapiRobotSendRequest request = new OapiRobotSendRequest();
+            request.setMsgtype("actionCard");
+            request.setActionCard(actionCard);
+
+            try {
+                client.execute(request);
+            } catch (ApiException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+    }
+
+
+    private String buildServiceURL(DingTalkConfig dingTalkConfig) {
         String serveUrl = API + dingTalkConfig.getToken();
-        if (!StringUtils.isEmpty(dingTalkConfig.getSecret() )) {
-            Map<String, Object> signMap = getSignMap();
+        if (!StringUtils.isEmpty(dingTalkConfig.getSecret())) {
+            Map<String, Object> signMap = getSignMap(dingTalkConfig);
             serveUrl += "&sign=" + signMap.get("sign") + "&timestamp=" + signMap.get("timestamp");
         }
         return serveUrl;
     }
 
 
-
-    private Map<String, Object> getSignMap() {
+    private Map<String, Object> getSignMap(DingTalkConfig dingTalkConfig) {
         Map<String, Object> map = new HashMap<>(16);
         Long timestamp = System.currentTimeMillis();
         log.info("获取时间戳" + timestamp);
