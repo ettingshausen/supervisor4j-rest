@@ -67,6 +67,14 @@
                 <configuration>
                     <image>
                         <name>winning.com/library/${project.artifactId}</name>
+                        <bindings>
+                            <binding>${user.home}/develop/docker/bindings/bellsoft-jdk-config:/platform/bindings/bellsoft-jdk-config</binding>
+                            <binding>${user.home}/develop/docker/bindings/certificates:/platform/bindings/certificates</binding>
+                        </bindings>
+<!--                        <env>-->
+<!--                            <HTTP_PROXY>http://192.168.31.222:8001</HTTP_PROXY>-->
+<!--                            <HTTPS_PROXY>http://192.168.31.222:8001</HTTPS_PROXY>-->
+<!--                        </env>-->
                     </image>
                     <excludes>
                         <exclude>
