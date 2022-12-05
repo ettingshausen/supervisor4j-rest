@@ -67,6 +67,8 @@
                 <configuration>
                     <image>
                         <name>winning.com/library/${project.artifactId}</name>
+                        <builder>ettingshausen/builder</builder>
+                        <runImage>ettingshausen/run</runImage>
                         <bindings>
                             <binding>${user.home}/develop/docker/bindings/bellsoft-jdk-config:/platform/bindings/bellsoft-jdk-config</binding>
                             <binding>${user.home}/develop/docker/bindings/certificates:/platform/bindings/certificates</binding>
